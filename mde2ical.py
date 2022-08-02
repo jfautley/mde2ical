@@ -28,13 +28,14 @@ def process_resort_checkin(event):
     e.add('dtstart', ci)
     e.add('dtend', co)
     e.add('summary', f"Staying at {event['title']}")
-    e.add('url', event['links']['finder']['href'])
+
+    event_url = event['links'].get('finder')
+    if event_url:
+        e.add('url', event_url['href'])
     
     if len(event['guests']) > 0:
-        print("Guests:")
         for g in event['guests']:
             e.add('attendee', guests[g['id']])
-            print(f"\t{guests[g['id']]}")
     return(e)
 
 def process_dining(event):
@@ -46,6 +47,10 @@ def process_dining(event):
     event_url = event['links'].get('finder')
     if event_url:
         e.add('url', event_url['href'])
+
+    if len(event['guests']) > 0:
+        for g in event['guests']:
+            e.add('attendee', guests[g['guest']['id']])
 
     return(e)
 
