@@ -16,7 +16,7 @@ You will need to obtain your JSON plans file from MyDisneyExperience. The easies
   9. Load this into your calendar app of choice!
   
   
-##TODO
+## TODO
   - [ ] Automatically login to MDE and grab the JSON, removing the horrid stuff above (see https://github.com/cwendt94/espn-api/discussions/150 for some details, the tl;dr is that Disney now use Google reCaptcha so we can't just programatically scrape the API)
   - [ ] Support additonal event types - currently I don't have any Genie+/$ILL reservations so I don't know how these look
   - [ ] Process additional 'Ticketed Events' (such as MNSSHP) and add these to the calendar
