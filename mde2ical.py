@@ -3,9 +3,9 @@
 import json
 import icalendar
 import pytz
+import sys
 from dateutil import parser
 from datetime import datetime
-from pprint import pprint
 
 ## Instantiate
 cal = icalendar.Calendar()
@@ -13,8 +13,12 @@ cal = icalendar.Calendar()
 # Update timezone
 PARK_TIMEZONE = "America/New_York"
 
-with open('plans.json', 'r') as f:
-    plans = json.load(f)
+try:
+    with open(sys.argv[1], 'r') as f:
+        plans = json.load(f)
+except:
+    print(f"Usage: {sys.argv[0]} <filename>")
+    sys.exit(1)
 
 def process_resort_checkin(event):
     ci = parser.parse(f"{event['startDate']} {event['checkInTime']}").replace(tzinfo=pytz.timezone(PARK_TIMEZONE))
