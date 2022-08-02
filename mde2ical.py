@@ -4,6 +4,7 @@ import json
 import icalendar
 import pytz
 import sys
+import os
 from dateutil import parser
 from datetime import datetime
 
@@ -74,7 +75,9 @@ for day in plans['days']:
             cal.add_component(process_dining(event))
         #print(f"Event: {event['type']} / {event['title']}")
 
-
-out = open('./test.vcs', 'wb')
+outfile = f"{os.path.splitext(sys.argv[1])[0]}.vcs"
+out = open(outfile, 'wb')
 out.write(cal.to_ical())
 out.close()
+
+print(f"Calendar has been output to {outfile}")
