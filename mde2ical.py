@@ -7,6 +7,7 @@ import sys
 import os
 from dateutil import parser
 from datetime import datetime
+from datetime import timedelta
 
 ## Instantiate
 cal = icalendar.Calendar()
@@ -21,9 +22,17 @@ except:
     print(f"Usage: {sys.argv[0]} <filename>")
     sys.exit(1)
 
-def process_resort_checkin(event):
+def process_resort_checkin(event, lastDayOfStay):
     ci = parser.parse(event['startDate']).date()
+    # Whole day events end at midnight, so we "lose" a day at the end of our
+    # reservation. We check the plans before arriving here and treat a check-in
+    # and check-out event on the same day as a coninuous trip. If we are
+    # 'lastDayOfStay' then we append +1 day to the checkout date to complete
+    # the calendar entry.
+    # RFC5545 confirms DTEND is "non-inclusive", for reference.
     co = parser.parse(event['endDate']).date()
+    if lastDayOfStay:
+        co = co + timedelta(days = 1)
     e = icalendar.Event()
     e.add('uid', event['id'])
     e.add('dtstart', ci)
@@ -111,10 +120,23 @@ for day in plans['days']:
         # Process resort checkin - this include our CI/CO dates, so we can
         # ignore the RESORT_ROOM_CHECKOUT object, as well as the per-day
         # RESORT_STAY objects.
-        if event['type'] == 'RESORT':
-            if event['subType'] != 'RESORT_ROOM_CHECKIN':
-                continue
-            cal.add_component(process_resort_checkin(event))
+        # We also do some testing here to see if this is a
+        # split-ticket/continuous 'trip' - this feeds into the calendar event
+        # generation for the resort stay(s) to ensure we don't drop our last
+        # day.
+        if event['type'] == 'RESORT' and event['subType'] == 'RESORT_ROOM_CHECKIN':
+            lastDayOfStay = True
+
+            # Iterate over our days to find our check-out day, and see if this the last day of our stay.
+            for d in plans['days']:
+                if event['endDate'] == d['date']:
+                    # This is our check-out date - check our reservations for this day.
+                    for e in d['plans']:
+                        if e['type'] == 'RESORT' and e['subType'] == 'RESORT_ROOM_CHECKIN':
+                            # We have both check-in and check-out events ont he same day, this is a continuing trip.
+                            lastDayOfStay = False
+
+            cal.add_component(process_resort_checkin(event, lastDayOfStay))
 
         # Process dining events
         if event['type'] == 'DINING':
