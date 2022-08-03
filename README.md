@@ -14,10 +14,21 @@ You will need to obtain your JSON plans file from MyDisneyExperience. The easies
   7. Run `mde2ical.py <filename>`, where `<filename>` is the name of the file you created above
   8. A VCS (iCalendar/VCalendar) file will be created and the name printed on screen
   9. Load this into your calendar app of choice!
+
+## Automatically obtaining your plans
+There is a simple-ish script in `getJson.py` that uses [Selenium Wire](https://pypi.org/project/selenium-wire/) to automatically perform the MDE login and download your plans JSON. Due to the nature of how automatic web scraping works, this may break at any time.
+
+Its hard-coded to use the Chrome webdriver (so make sure you have this installed!) and will output your plans to `my_plans.json`.
+
+This does simplify the how to use section a bit:
+
+  1. Run `getCreds.json`
+  2. Run `mde2ical.py my_plans.json`
+  3. Load `my_plans.vcs` into your calendar!
   
   
 ## TODO
-  - [ ] Automatically login to MDE and grab the JSON, removing the horrid stuff above (see https://github.com/cwendt94/espn-api/discussions/150 for some details, the tl;dr is that Disney now use Google reCaptcha so we can't just programatically scrape the API)
+  - [X] Automatically login to MDE and grab the JSON, removing the horrid stuff above (see https://github.com/cwendt94/espn-api/discussions/150 for some details, the tl;dr is that Disney now use Google reCaptcha so we can't just programatically scrape the API)
   - [ ] Support additonal event types - currently I don't have any Genie+/$ILL reservations so I don't know how these look
   - [ ] Process additional 'Ticketed Events' (such as MNSSHP) and add these to the calendar
 
