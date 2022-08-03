@@ -60,7 +60,11 @@ def process_park_reservation(event):
     # Don't add a time to a park reservation as we don't want to block our calendar for the whole day.
     event_date = parser.parse(event['startDate']).date()
     e = icalendar.Event()
-    e.add('uid', event['id'])
+
+    # The ID for a park pass seems to change, so lets set something 'well
+    # known', as this also allows the calendar to update when people swap their
+    # plans around.
+    e.add('uid', f"parkpass-{event['startDate']}")
     e.add('dtstart', event_date)
     e.add('summary', f"{event['location']} Park Pass")
 
