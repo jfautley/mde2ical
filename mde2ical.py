@@ -56,6 +56,24 @@ def process_dining(event):
 
     return(e)
 
+def process_park_reservation(event):
+    # Don't add a time to a park reservation as we don't want to block our calendar for the whole day.
+    event_date = parser.parse(event['startDate']).date()
+    e = icalendar.Event()
+    e.add('uid', event['id'])
+    e.add('dtstart', event_date)
+    e.add('summary', f"{event['title']} - {event['location']}")
+
+    event_url = event['links'].get('finder')
+    if event_url:
+        e.add('url', event_url['href'])
+
+    if len(event['guests']) > 0:
+        for g in event['guests']:
+            e.add('attendee', guests[g['id']])
+
+    return(e)
+
 def process_activity(event):
     event_time = parser.parse(f"{event['startDate']} {event['startTime']}").replace(tzinfo=pytz.timezone(PARK_TIMEZONE))
     e = icalendar.Event()
@@ -94,13 +112,17 @@ for day in plans['days']:
                 continue
             cal.add_component(process_resort_checkin(event))
 
-
+        # Process dining events
         if event['type'] == 'DINING':
             cal.add_component(process_dining(event))
-        #print(f"Event: {event['type']} / {event['title']}")
 
+        # Process 'activities' (i.e. tours, special events)
         if event['type'] == 'ACTIVITY':
             cal.add_component(process_activity(event))
+
+        # Process Park Reservations
+        if event['type'] == 'FASTPASS' and event.get('subType') == "PARK_RESERVATION":
+            cal.add_component(process_park_reservation(event))
 
 outfile = f"{os.path.splitext(sys.argv[1])[0]}.vcs"
 out = open(outfile, 'wb')
