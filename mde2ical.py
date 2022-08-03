@@ -62,7 +62,7 @@ def process_park_reservation(event):
     e = icalendar.Event()
     e.add('uid', event['id'])
     e.add('dtstart', event_date)
-    e.add('summary', f"{event['title']} - {event['location']}")
+    e.add('summary', f"{event['location']} Park Pass")
 
     event_url = event['links'].get('finder')
     if event_url:
