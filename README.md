@@ -22,7 +22,7 @@ Its hard-coded to use the Chrome webdriver (so make sure you have this installed
 
 This does simplify the how to use section a bit:
 
-  1. Run `getCreds.json`
+  1. Run `getJson.py`
   2. Run `mde2ical.py my_plans.json`
   3. Load `my_plans.vcs` into your calendar!
   
