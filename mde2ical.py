@@ -39,6 +39,9 @@ def process_resort_checkin(event, lastDayOfStay):
     e.add('dtend', co)
     e.add('summary', f"Staying at {event['title']}")
 
+    descriptionString = f"Confirmation Number: {event['confirmationNumber']}\nRoom Type: {event['roomType']}"
+    e.add('description', descriptionString)
+
     event_url = event['links'].get('finder')
     if event_url:
         e.add('url', event_url['href'])
@@ -54,6 +57,10 @@ def process_dining(event):
     e.add('uid', event['id'])
     e.add('dtstart', event_time)
     e.add('summary', event['title'])
+    e.add('location', event['location'])
+
+    descriptionString = f"Confirmation Number: {event['confirmationNumber']}\nContact Number: tel:+1-{event['facilityPhoneNumber'].replace(' ', '-')}"
+    e.add('description', descriptionString)
 
     event_url = event['links'].get('finder')
     if event_url:
@@ -75,7 +82,7 @@ def process_park_reservation(event):
     # plans around.
     e.add('uid', f"parkpass-{event['startDate']}")
     e.add('dtstart', event_date)
-    e.add('summary', f"{event['location']} Park Pass")
+    e.add('summary', event['location'])
 
     event_url = event['links'].get('finder')
     if event_url:
