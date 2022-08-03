@@ -22,8 +22,8 @@ except:
     sys.exit(1)
 
 def process_resort_checkin(event):
-    ci = parser.parse(f"{event['startDate']} {event['checkInTime']}").replace(tzinfo=pytz.timezone(PARK_TIMEZONE))
-    co = parser.parse(f"{event['endDate']} {event['checkOutTime']}").replace(tzinfo=pytz.timezone(PARK_TIMEZONE))
+    ci = parser.parse(event['startDate']).date()
+    co = parser.parse(event['endDate']).date()
     e = icalendar.Event()
     e.add('uid', event['id'])
     e.add('dtstart', ci)
