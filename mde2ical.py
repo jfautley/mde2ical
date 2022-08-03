@@ -25,6 +25,7 @@ def process_resort_checkin(event):
     ci = parser.parse(f"{event['startDate']} {event['checkInTime']}").replace(tzinfo=pytz.timezone(PARK_TIMEZONE))
     co = parser.parse(f"{event['endDate']} {event['checkOutTime']}").replace(tzinfo=pytz.timezone(PARK_TIMEZONE))
     e = icalendar.Event()
+    e.add('uid', event['id'])
     e.add('dtstart', ci)
     e.add('dtend', co)
     e.add('summary', f"Staying at {event['title']}")
@@ -41,6 +42,7 @@ def process_resort_checkin(event):
 def process_dining(event):
     event_time = parser.parse(f"{event['startDate']} {event['startTime']}").replace(tzinfo=pytz.timezone(PARK_TIMEZONE))
     e = icalendar.Event()
+    e.add('uid', event['id'])
     e.add('dtstart', event_time)
     e.add('summary', event['title'])
 
@@ -51,6 +53,23 @@ def process_dining(event):
     if len(event['guests']) > 0:
         for g in event['guests']:
             e.add('attendee', guests[g['guest']['id']])
+
+    return(e)
+
+def process_activity(event):
+    event_time = parser.parse(f"{event['startDate']} {event['startTime']}").replace(tzinfo=pytz.timezone(PARK_TIMEZONE))
+    e = icalendar.Event()
+    e.add('uid', event['id'])
+    e.add('dtstart', event_time)
+    e.add('summary', event['title'])
+
+    event_url = event['links'].get('finder')
+    if event_url:
+        e.add('url', event_url['href'])
+
+    if len(event['guests']) > 0:
+        for g in event['guests']:
+            e.add('attendee', guests[g['id']])
 
     return(e)
 
@@ -79,6 +98,9 @@ for day in plans['days']:
         if event['type'] == 'DINING':
             cal.add_component(process_dining(event))
         #print(f"Event: {event['type']} / {event['title']}")
+
+        if event['type'] == 'ACTIVITY':
+            cal.add_component(process_activity(event))
 
 outfile = f"{os.path.splitext(sys.argv[1])[0]}.vcs"
 out = open(outfile, 'wb')
