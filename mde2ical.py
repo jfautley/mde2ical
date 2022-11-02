@@ -154,7 +154,7 @@ for day in plans['days']:
             cal.add_component(process_activity(event))
 
         # Process Park Reservations
-        if event['type'] == 'FASTPASS' and event.get('subType') == "PARK_RESERVATION":
+        if event.get('type') == "PARK_RESERVATION":
             cal.add_component(process_park_reservation(event))
 
 outfile = f"{os.path.splitext(sys.argv[1])[0]}.vcs"
