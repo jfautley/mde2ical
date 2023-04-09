@@ -5,15 +5,23 @@ import icalendar
 import pytz
 import sys
 import os
+import hashlib
+import uuid
 from dateutil import parser
 from datetime import datetime
 from datetime import timedelta
 
 ## Instantiate
 cal = icalendar.Calendar()
+cal.add('prodid', '-//MDE2iCal//jfautley//')
+cal.add('version', '2.0')
+cal.add('X-WR-RELCALID', 'mde2ical//disney')
 
 # Update timezone
 PARK_TIMEZONE = "America/New_York"
+
+# How long to eat?
+FEEDING_TIME = timedelta(hours=1, minutes=30)
 
 try:
     with open(sys.argv[1], 'r') as f:
@@ -21,6 +29,9 @@ try:
 except:
     print(f"Usage: {sys.argv[0]} <filename>")
     sys.exit(1)
+
+def gen_uid(id):
+    return str(uuid.UUID(bytes=hashlib.md5(id.encode()).digest()))
 
 def process_resort_checkin(event, lastDayOfStay):
     ci = parser.parse(event['startDate']).date()
@@ -31,10 +42,10 @@ def process_resort_checkin(event, lastDayOfStay):
     # the calendar entry.
     # RFC5545 confirms DTEND is "non-inclusive", for reference.
     co = parser.parse(event['endDate']).date()
-    if lastDayOfStay:
-        co = co + timedelta(days = 1)
+    #if lastDayOfStay:
+    #    co = co + timedelta(days = 1)
     e = icalendar.Event()
-    e.add('uid', event['id'])
+    e.add('uid', gen_uid(event['id']))
     e.add('dtstart', ci)
     e.add('dtend', co)
     e.add('summary', f"Staying at {event['title']}")
@@ -54,8 +65,9 @@ def process_resort_checkin(event, lastDayOfStay):
 def process_dining(event):
     event_time = parser.parse(f"{event['startDate']} {event['startTime']}").replace(tzinfo=pytz.timezone(PARK_TIMEZONE))
     e = icalendar.Event()
-    e.add('uid', event['id'])
+    e.add('uid', gen_uid(event['id']))
     e.add('dtstart', event_time)
+    e.add('dtend', event_time + FEEDING_TIME)
     e.add('summary', event['title'])
     e.add('location', event['location'])
 
@@ -80,7 +92,7 @@ def process_park_reservation(event):
     # The ID for a park pass seems to change, so lets set something 'well
     # known', as this also allows the calendar to update when people swap their
     # plans around.
-    e.add('uid', f"parkpass-{event['startDate']}")
+    e.add('uid', gen_uid(event['id']))
     e.add('dtstart', event_date)
     e.add('summary', event['location'])
 
@@ -97,8 +109,9 @@ def process_park_reservation(event):
 def process_activity(event):
     event_time = parser.parse(f"{event['startDate']} {event['startTime']}").replace(tzinfo=pytz.timezone(PARK_TIMEZONE))
     e = icalendar.Event()
-    e.add('uid', event['id'])
+    e.add('uid', gen_uid(event['id']))
     e.add('dtstart', event_time)
+    e.add('dtend', event_time + timedelta(hours=2))
     e.add('summary', event['title'])
 
     event_url = event['links'].get('finder')
@@ -157,7 +170,7 @@ for day in plans['days']:
         if event.get('type') == "PARK_RESERVATION":
             cal.add_component(process_park_reservation(event))
 
-outfile = f"{os.path.splitext(sys.argv[1])[0]}.vcs"
+outfile = f"{os.path.splitext(sys.argv[1])[0]}.ics"
 out = open(outfile, 'wb')
 out.write(cal.to_ical())
 out.close()
