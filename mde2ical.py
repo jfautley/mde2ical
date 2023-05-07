@@ -8,8 +8,10 @@ import os
 import hashlib
 import uuid
 from dateutil import parser
+import dateutil.parser
 from datetime import datetime
 from datetime import timedelta
+import jsonpath_ng.ext
 
 ## Instantiate
 cal = icalendar.Calendar()
@@ -128,6 +130,32 @@ def process_activity(event):
 guests = {}
 for guest in plans['guests']:
     guests[guest['id']] = f"{guest['name']['first']} {guest['name']['last']}"
+
+# Obtain Ticketing Information
+for ticket in plans['parkAdmissions']['tickets']['admissions']:
+    # Process Park Tickets (used only for SPECIAL_EVENT tickets for now)
+    if ticket.get('type') == 'PARK_ADMISSION' and ticket.get('subType') == 'SPECIAL_EVENT':
+        try:
+            event_time = parser.parse(ticket['title'], fuzzy=True)
+        except dateutil.parser.ParserError:
+            print(f"ERROR: Unable to determine event time of {ticket['title']} -- SKIPPING")
+            continue
+
+        # Crude de-dup by looking for the reassignable portion of the ticket (i.e. the 'main holder')
+        if not ticket.get('reassignableTo'):
+            continue
+
+        # Get the park hours for the special event
+        jp = jsonpath_ng.ext.parse(f'$.days[?(@.date=="{event_time.date()}")].plans[?(@.type=="PARK_HOURS")]')
+        for m in jp.find(plans):
+            park_name = m.value['title']
+            if park_name in ticket['title']:
+                e = icalendar.Event()
+                e.add('uid', gen_uid(ticket['id']))
+                e.add('dtstart', parser.parse(f"{event_time} {m.value['specialEventStartAt']}"))
+                e.add('dtend', parser.parse(f"{event_time} {m.value['specialEventEndAt']}") + timedelta(days=1))
+                e.add('summary', ticket['title'])
+                cal.add_component(e)
 
 # Iterate over the plans and generate iCalendar events
 for day in plans['days']:
