@@ -131,4 +131,4 @@ dmypy.json
 # Credentials
 mde_credentials.py
 *.json
-*.vcs
+*.ics
