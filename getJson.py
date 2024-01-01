@@ -19,7 +19,7 @@ c.get('https://disneyworld.co.uk/plans/')
 
 # Do the login
 sign_in_iframe = WebDriverWait(c, 30).until(
-    EC.presence_of_element_located((By.ID, 'disneyid-iframe'))
+    EC.presence_of_element_located((By.ID, 'oneid-iframe'))
 )
 
 # If needed, remove the cookie popover, otherwise we can't submit the form (as
@@ -32,6 +32,11 @@ except e:
 
 
 c.switch_to.frame(sign_in_iframe)
+
+# Switch to legacy login form
+c.execute_script("window.runWorkflow('LOGIN', 'biometrics')")
+
+# Submit credentials and login
 username = c.find_element(By.XPATH, "//input[@type='email']")
 password = c.find_element(By.XPATH, "//input[@type='password']")
 sign_in = c.find_element(By.XPATH, "//button[@type='submit']")
